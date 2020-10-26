@@ -1,0 +1,18 @@
+.bg-main-color{
+    background-color: lightblue;
+}
+.fa.fa-star{
+    color: yellow;
+}
+.fa.fa-star.checked{
+    color: red;
+}
+.bg-custom{
+    background-color: rgba(30, 120, 255, 0.8);
+}
+.cardwarning{
+    background-color: rgba(255, 108, 10, 0.8);
+}
+.carddanger{
+    background-color: rgba(255, 56, 30, 0.8);
+}

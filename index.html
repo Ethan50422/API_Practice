@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+        integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <!-- 底下載入font-awesome的CSS -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="./all.css">
+    <!-- 底下載入了axios的套件 -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <div class="bg-main-color">
+        <div class="container" id="app">
+            <p>可以查詢各個地區的最新空氣品質資訊，具備城市的搜尋功能，點選右上的星星可以加入關注的城市，方便對多個地區做資料的比對</p>
+            <p>提醒： <span style="color: rgba(30, 120, 255, 0.8);">藍色</span>為PM2.5 < 9，<span style="color:  rgba(255, 108, 10, 0.8);">橘色</span>為PM2.5 > 9 但 < 15，<span style="color: rgba(255, 56, 30, 0.8);">紅色</span>為PM2.5 > 15 的地區</p>
+            <p>現在正在關注的城市:</p>
+            <!-- 關注的城市 -->
+            <div class="row">
+                <!-- 利用v-if的方式顯示被關注的城市 -->
+                <div class="col col-lg-4 my-4" v-if="item['SiteId'] == true" v-for="(item, key) in apiData" :key="key">
+                    <div class="card text-white bg-custom mx-auto" :class="{'cardwarning': 8 < parseInt(item['PM2.5']) && parseInt(item['PM2.5']) < 15, 'carddanger': parseInt(item['PM2.5']) >= 15}" style="width: 18rem;">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <p class="card-title">{{item['County']}} - {{item['SiteName']}}</p>
+                            <!-- 加入關注城市的星星按鈕 -->
+                            <span class="fa fa-star" :class="{checked: item['SiteId'] == true}" @click="item['SiteId'] = !item['SiteId']"></span>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item bg-transparent">狀態： {{item['Status'] || '無資料'}}</li>
+                                <li class="list-group-item bg-transparent" :class="{danger: item['PM2.5'] >= 10}" >PM2.5： {{item['PM2.5'] || '無資料'}}</li>
+                                <li class="list-group-item bg-transparent">AQI指數： {{item['AQI'] || '無資料'}}</li>
+                            </ul>
+                        </div>
+                        <div class="card-footer">
+                            <p class="text-center">{{item['PublishTime']}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon1">@</span>
+                </div>
+                <input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
+            </div> -->
+            <label for="citysearch">底下選擇要查詢的城市</label>
+            <select class="form-control" id="citysearch" v-model="currentcity">
+                <option value="">--- 請選擇城市 ---</option>
+                <option v-for="(city, key) in cities" :value="city" :key="key">{{city}}</option>
+            </select>
+            <div class="row mt-2">
+                <div class="col col-lg-4 my-4" v-for="(item, key) in filterData[currentPage]" :key="key">
+                    <div class="card text-white bg-custom mx-auto" :class="{'cardwarning': 8 < parseInt(item['PM2.5']) && parseInt(item['PM2.5']) < 15, 'carddanger': parseInt(item['PM2.5']) >= 15}" style="width: 18rem;">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <p class="card-title">{{item['County']}} - {{item['SiteName']}}</p>
+                            <!-- 加入關注城市的星星按鈕 -->
+                            <span class="fa fa-star" :class="{checked: item['SiteId'] == true}" @click="item['SiteId'] = !item['SiteId']"></span>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item bg-transparent">狀態： {{item['Status'] || '無資料'}}</li>
+                                <li class="list-group-item bg-transparent">PM2.5： {{item['PM2.5'] || '無資料'}}</li>
+                                <li class="list-group-item bg-transparent">AQI指數： {{item['AQI'] || '無資料'}}</li>
+                            </ul>
+                        </div>
+                        <div class="card-footer">
+                            <p class="text-center">{{item['PublishTime']}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 分頁 -->
+            <nav aria-label="Page navigation example">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item" :class="{disabled: currentPage == 0}" v-if="currentcity == '' ">
+                        <a class="page-link" href="#" aria-label="Previous" @click="currentPage -= 1">
+                        <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    <!-- 當連結被點擊時更改currentPage的數值 -->
+                    <li class="page-item" 
+                        v-for="(num, key) in filterData"
+                        :key="key" :class="{active: currentPage == key}">
+                        <a class="page-link" href="#" 
+                        @click="currentPage = key"
+                        >{{key+1}}</a>
+                    </li>
+                    <li class="page-item" :class="{disabled: currentPage == 5}" v-if="currentcity == '' ">
+                        <a class="page-link" href="#" aria-label="Next" @click="currentPage += 1">
+                        <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    </ul>
+            </nav>
+        </div>
+        <footer class="py-3">
+            <p class="text-center">資料來源: 政府資料開放平台 https://data.gov.tw/dataset/40448</p>
+        </footer>
+    </div>
+
+    <!-- 底下加入Bootstrap4的JS功能 -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+        integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
+        integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV"
+        crossorigin="anonymous"></script>
+    <!-- 引進Vue功能 -->
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="./jquery-3.5.1.min.js"></script>
+    <script src="./all.js"></script>
+    <script>
+        // const url = 'https://randomuser.me/api/';
+        // const api = 'https://data.epa.gov.tw/api/v1/aqx_p_432?limit=1000&api_key=9be7b239-557b-4c10-9775-78cadfc555e9&format=json';
+        // const axios = require('axios');
+        // axios.get(api)
+        //     .then(function(response){
+        //         console.log('success')
+        //         console.log(response.data)
+                
+        //     })
+        //     .catch(function(error){
+        //         console.log('fail');
+        //     })
+        // 開始寫Vue的功能
+        var app = new Vue({
+            el: '#app',
+            data: {
+                apiData: [],
+                ischeck: false,
+                cities: [],
+                currentcity: '',
+                currentPage: 0,
+                str: '',
+            },
+            created () {
+                const api = 'https://data.epa.gov.tw/api/v1/aqx_p_432?limit=1000&api_key=9be7b239-557b-4c10-9775-78cadfc555e9&format=json';
+                const vm = this;
+                axios.get(api)
+                    .then(function(response){
+                        // console.log(response.data.records)
+                        vm.apiData = response.data.records
+                        vm.apiData.forEach(function(item, key){
+                            item['SiteId'] = false
+                        })
+                        vm.getapiData();
+                        // console.log('success');
+                    })
+                    .catch(function(error){
+                        console.log('fail');
+                    })
+            },
+            methods: {
+                getapiData () {
+                    const cities = new Set (); //陣列內容不得重複
+                    const vm = this;
+                    vm.apiData.forEach(function(item, i){
+                        cities.add(item['County'])
+                    })
+                    vm.cities = Array.from(cities);
+                }
+            },
+            computed: {
+                filterData(){
+                    const vm = this
+                    if(vm.currentcity !== ''){
+                        const filterData = []
+                        vm.apiData.forEach(function(item, key){
+                            if(item['County'] === vm.currentcity)
+                            filterData.push(item)
+                        })
+                        const newData = []
+                        filterData.forEach(function(item, key){
+                            if(key % 15 === 0) {
+                                newData.push([])
+                            }
+                            if(item['County'] === vm.currentcity){
+                                const currentPage = parseInt(key / 15)
+                                
+                                newData[currentPage].push(item)
+                            }
+                        })
+                        // console.log(newData)
+                        return newData
+                    } else {
+                        // 練習做15個資料為一組的分頁功能
+                        const newData = []
+                        vm.apiData.forEach(function(item, key){
+                            if(key % 15 === 0) {
+                                newData.push([])
+                                
+                                // console.log(vm.currentPage)
+                            }
+                            const currentPage = parseInt(key / 15)
+                            
+                            newData[currentPage].push(item)
+                        })
+                        // console.log(newData)
+                        return newData
+                    }
+                }
+            },
+            watch: {
+                // 利用watch的方式來監聽currentcity的值是否有變化，如果有變化就執行底下的函式
+                currentcity: function () {
+                    const vm = this
+                    vm.currentPage = 0
+                }
+            }
+        })
+    </script>
+</body>
+</html>
