@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>全國空氣品質指標資料查詢</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
         integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
     <!-- 底下載入font-awesome的CSS -->
@@ -15,6 +15,7 @@
 <body>
     <div class="bg-main-color">
         <div class="container" id="app">
+            <img src="./pexels-lukas-296234.jpg" alt="天空的照片" v-show="false">
             <p>可以查詢各個地區的最新空氣品質資訊，具備城市的搜尋功能，點選右上的星星可以加入關注的城市，方便對多個地區做資料的比對</p>
             <p>提醒： <span style="color: rgba(30, 120, 255, 0.8);">藍色</span>為PM2.5 < 9，<span style="color:  rgba(255, 108, 10, 0.8);">橘色</span>為PM2.5 > 9 但 < 15，<span style="color: rgba(255, 56, 30, 0.8);">紅色</span>為PM2.5 > 15 的地區</p>
             <p>現在正在關注的城市:</p>
