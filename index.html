@@ -15,17 +15,22 @@
 <body>
     <div class="bg-main-color">
         <div class="container" id="app">
+            <!-- 底下使用v-show的方式將圖片給隱藏起來 -->
             <img src="./pexels-lukas-296234.jpg" alt="天空的照片" v-show="false">
+            <h1 class="text-center py-3">全國空氣品質AQI查詢</h1>
             <p>可以查詢各個地區的最新空氣品質資訊，具備城市的搜尋功能，點選右上的星星可以加入關注的城市，方便對多個地區做資料的比對</p>
-            <p>提醒： <span style="color: rgba(30, 120, 255, 0.8);">藍色</span>為PM2.5 < 9，<span style="color:  rgba(255, 108, 10, 0.8);">橘色</span>為PM2.5 > 9 但 < 15，<span style="color: rgba(255, 56, 30, 0.8);">紅色</span>為PM2.5 > 15 的地區</p>
-            <p>現在正在關注的城市:</p>
+            <!-- <p>提醒： 為PM2.5 < 9，為PM2.5 > 9 但 < 15，為PM2.5 > 15 的地區</p> -->
+            <p>提醒：<strong style="color: rgb(16, 192, 0);">綠色</strong>為AQI <= 50 ，<strong style="color: rgba(249, 253, 15, 0.9);">黃色</strong>為50 < AQI <= 100，<strong style="color:  rgba(255, 108, 10, 0.8);">橘色</strong>為 100 < AQI <= 150，<strong style="color: rgba(255, 56, 30, 0.8);">紅色</strong>為AQI > 150</p>
+            <p>依照指標分級：<strong style="color: rgb(16, 192, 0);">綠色</strong>為良好，<strong style="color: rgba(249, 253, 15, 0.9);">黃色</strong>為普通，<strong style="color:  rgba(255, 108, 10, 0.8);">橘色</strong>為對敏感族群不良，<strong style="color: rgba(255, 56, 30, 0.8);">紅色</strong>為對所有族群不良</p>
+            <p>點選右上角的星星符號可以將該城市加入到關注中的地區</p>
+            <strong>現在正在關注的城市:</strong>
             <!-- 關注的城市 -->
             <div class="row">
                 <!-- 利用v-if的方式顯示被關注的城市 -->
                 <div class="col col-lg-4 my-4" v-if="item['SiteId'] == true" v-for="(item, key) in apiData" :key="key">
-                    <div class="card text-white bg-custom mx-auto" :class="{'cardwarning': 8 < parseInt(item['PM2.5']) && parseInt(item['PM2.5']) < 15, 'carddanger': parseInt(item['PM2.5']) >= 15}" style="width: 18rem;">
+                    <div class="card text-white bg-custom mx-auto" :class="{'cardyellow': 50 < parseInt(item['AQI']) && parseInt(item['AQI']) <= 100,'cardwarning': 100 < parseInt(item['AQI']) && parseInt(item['AQI']) <= 150, 'carddanger': parseInt(item['AQI']) >= 151}" style="width: 18rem;">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <p class="card-title">{{item['County']}} - {{item['SiteName']}}</p>
+                            <p class="card-title" style="font-size: 20px;">{{item['County']}} - {{item['SiteName']}}</p>
                             <!-- 加入關注城市的星星按鈕 -->
                             <span class="fa fa-star" :class="{checked: item['SiteId'] == true}" @click="item['SiteId'] = !item['SiteId']"></span>
                         </div>
@@ -42,6 +47,9 @@
                     </div>
                 </div>
             </div>
+            <!-- <div>
+                <input type="checkbox" name="" id="" v-model="checktest">
+            </div> -->
             <!-- <div class="input-group mb-3">
                 <div class="input-group-prepend">
                     <span class="input-group-text" id="basic-addon1">@</span>
@@ -55,9 +63,9 @@
             </select>
             <div class="row mt-2">
                 <div class="col col-lg-4 my-4" v-for="(item, key) in filterData[currentPage]" :key="key">
-                    <div class="card text-white bg-custom mx-auto" :class="{'cardwarning': 8 < parseInt(item['PM2.5']) && parseInt(item['PM2.5']) < 15, 'carddanger': parseInt(item['PM2.5']) >= 15}" style="width: 18rem;">
+                    <div class="card text-white bg-custom mx-auto" :class="{'cardyellow': 50 < parseInt(item['AQI']) && parseInt(item['AQI']) <= 100,'cardwarning': 100 < parseInt(item['AQI']) && parseInt(item['AQI']) <= 150, 'carddanger': parseInt(item['AQI']) >= 151}" style="width: 18rem;">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <p class="card-title">{{item['County']}} - {{item['SiteName']}}</p>
+                            <p class="card-title" style="font-size: 20px;">{{item['County']}} - {{item['SiteName']}}</p>
                             <!-- 加入關注城市的星星按鈕 -->
                             <span class="fa fa-star" :class="{checked: item['SiteId'] == true}" @click="item['SiteId'] = !item['SiteId']"></span>
                         </div>
@@ -140,6 +148,7 @@
                 currentcity: '',
                 currentPage: 0,
                 str: '',
+                checktest: false
             },
             created () {
                 const api = 'https://data.epa.gov.tw/api/v1/aqx_p_432?limit=1000&api_key=9be7b239-557b-4c10-9775-78cadfc555e9&format=json';
